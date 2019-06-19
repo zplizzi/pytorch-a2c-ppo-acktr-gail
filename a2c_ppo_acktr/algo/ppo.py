@@ -15,7 +15,8 @@ class PPO():
                  lr=None,
                  eps=None,
                  max_grad_norm=None,
-                 use_clipped_value_loss=True):
+                 use_clipped_value_loss=True,
+                 tracker=None):
 
         self.actor_critic = actor_critic
 
@@ -30,8 +31,9 @@ class PPO():
         self.use_clipped_value_loss = use_clipped_value_loss
 
         self.optimizer = optim.Adam(actor_critic.parameters(), lr=lr, eps=eps)
+        self.tracker = tracker
 
-    def update(self, rollouts):
+    def update(self, rollouts, i):
         advantages = rollouts.returns[:-1] - rollouts.value_preds[:-1]
         advantages = (advantages - advantages.mean()) / (
             advantages.std() + 1e-5)
@@ -77,8 +79,8 @@ class PPO():
                     value_loss = 0.5 * (return_batch - values).pow(2).mean()
 
                 self.optimizer.zero_grad()
-                (value_loss * self.value_loss_coef + action_loss -
-                 dist_entropy * self.entropy_coef).backward()
+                loss = value_loss * self.value_loss_coef + action_loss - dist_entropy * self.entropy_coef
+                loss.backward()
                 nn.utils.clip_grad_norm_(self.actor_critic.parameters(),
                                          self.max_grad_norm)
                 self.optimizer.step()
@@ -92,5 +94,40 @@ class PPO():
         value_loss_epoch /= num_updates
         action_loss_epoch /= num_updates
         dist_entropy_epoch /= num_updates
+
+        print(i)
+        if i % 5 == 0:
+            self.tracker.add_scalar("loss/ppo loss", action_loss, i)
+            self.tracker.add_scalar("loss/value_loss", value_loss*self.value_loss_coef, i)
+            self.tracker.add_scalar("loss/entropy_loss", -1*dist_entropy*self.entropy_coef, i)
+            self.tracker.add_scalar("loss/loss", loss, i)
+            self.tracker.add_scalar("rewards/mean value", torch.mean(values), i)
+            self.tracker.add_scalar("rewards/mean rewards to go", torch.mean(return_batch), i)
+            self.tracker.add_scalar("rewards/mean prob ratio", torch.mean(ratio), i)
+            self.tracker.add_scalar("policy/policy entropy", dist_entropy, i)
+            # self.tracker.log_iteration_time(NUM_WORKERS * NUM_STEPS, i)
+
+        if i % 30 == 0:
+            if len(actions_batch.shape) == 3:
+                for k in range(actions_batch.shape[2]):
+                    self.tracker.add_histogram(f"policy/actions_{k}", actions_batch[:, :, k], i)
+            else:
+                self.tracker.add_histogram("policy/actions", actions_batch, i)
+
+            self.tracker.add_histogram("rewards/values", values, i)
+            self.tracker.add_histogram("rewards/advantages", advantages, i)
+            self.tracker.add_histogram("rewards/rewards to go", return_batch, i)
+            self.tracker.add_histogram("rewards/prob ratio", ratio, i)
+            self.tracker.add_histogram("loss/ppo_loss_hist", torch.min(surr1, surr2), i)
+            # try:
+            #     self.tracker.add_histogram("policy/cov", model.dist.stds.detach().cpu(), i)
+            # except AttributeError:
+            #     pass
+
+
+
+
+
+
 
         return value_loss_epoch, action_loss_epoch, dist_entropy_epoch
