@@ -111,6 +111,8 @@ def make_vec_envs(env_name,
 # Checks whether done was caused my timit limits or not
 class TimeLimitMask(gym.Wrapper):
     def step(self, action):
+        # print("time limit mask")
+        # print(action)
         obs, rew, done, info = self.env.step(action)
         if done and self.env._max_episode_steps == self.env._elapsed_steps:
             info['bad_transition'] = True

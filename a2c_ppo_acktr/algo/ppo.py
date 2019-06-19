@@ -96,7 +96,7 @@ class PPO():
         dist_entropy_epoch /= num_updates
 
         print(i)
-        if i % 5 == 0:
+        if i % 1 == 0:
             self.tracker.add_scalar("loss/ppo loss", action_loss, i)
             self.tracker.add_scalar("loss/value_loss", value_loss*self.value_loss_coef, i)
             self.tracker.add_scalar("loss/entropy_loss", -1*dist_entropy*self.entropy_coef, i)
@@ -107,7 +107,7 @@ class PPO():
             self.tracker.add_scalar("policy/policy entropy", dist_entropy, i)
             # self.tracker.log_iteration_time(NUM_WORKERS * NUM_STEPS, i)
 
-        if i % 30 == 0:
+        if i % 5 == 0:
             if len(actions_batch.shape) == 3:
                 for k in range(actions_batch.shape[2]):
                     self.tracker.add_histogram(f"policy/actions_{k}", actions_batch[:, :, k], i)

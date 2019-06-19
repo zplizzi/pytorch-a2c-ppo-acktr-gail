@@ -60,6 +60,8 @@ class Policy(nn.Module):
         else:
             action = dist.sample()
 
+        # print(action)
+
         action_log_probs = dist.log_probs(action)
         dist_entropy = dist.entropy().mean()
 
