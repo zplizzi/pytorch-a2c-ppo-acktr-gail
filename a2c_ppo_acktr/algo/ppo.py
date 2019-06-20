@@ -116,8 +116,8 @@ class PPO():
             self.tracker.add_histogram("rewards/advantages", advantages, i)
             self.tracker.add_histogram("rewards/rewards to go", return_batch, i)
             self.tracker.add_histogram("rewards/prob ratio", ratio, i)
-            self.tracker.add_histogram("loss/ppo_loss_hist", torch.min(surr1, surr2), i)
-            self.tracker.add_histogram("policy/cov", self.actor_critic.dist.logstd._bias.exp(), i)
+            self.tracker.add_histogram("loss/ppo_loss_hist", -1 * torch.min(surr1, surr2), i)
+            # self.tracker.add_histogram("policy/cov", self.actor_critic.dist.logstd._bias.exp(), i)
 
 
 
