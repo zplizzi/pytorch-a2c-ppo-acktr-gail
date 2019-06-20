@@ -60,6 +60,7 @@ class PPO():
                     obs_batch, recurrent_hidden_states_batch, masks_batch,
                     actions_batch)
 
+
                 ratio = torch.exp(action_log_probs -
                                   old_action_log_probs_batch)
                 surr1 = ratio * adv_targ
@@ -108,21 +109,15 @@ class PPO():
             # self.tracker.log_iteration_time(NUM_WORKERS * NUM_STEPS, i)
 
         if i % 5 == 0:
-            if len(actions_batch.shape) == 3:
-                for k in range(actions_batch.shape[2]):
-                    self.tracker.add_histogram(f"policy/actions_{k}", actions_batch[:, :, k], i)
-            else:
-                self.tracker.add_histogram("policy/actions", actions_batch, i)
+            for k in range(actions_batch.shape[1]):
+                self.tracker.add_histogram(f"policy/actions_{k}", actions_batch[:, k], i)
 
             self.tracker.add_histogram("rewards/values", values, i)
             self.tracker.add_histogram("rewards/advantages", advantages, i)
             self.tracker.add_histogram("rewards/rewards to go", return_batch, i)
             self.tracker.add_histogram("rewards/prob ratio", ratio, i)
             self.tracker.add_histogram("loss/ppo_loss_hist", torch.min(surr1, surr2), i)
-            # try:
-            #     self.tracker.add_histogram("policy/cov", model.dist.stds.detach().cpu(), i)
-            # except AttributeError:
-            #     pass
+            self.tracker.add_histogram("policy/cov", self.actor_critic.dist.logstd._bias.exp(), i)
 
 
 

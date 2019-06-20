@@ -197,6 +197,8 @@ def main():
             evaluate(actor_critic, ob_rms, args.env_name, args.seed,
                      args.num_processes, eval_log_dir, device)
 
+        tracker.add_histogram("episode/episode_rewards", episode_rewards, j)
+
 
 if __name__ == "__main__":
     main()

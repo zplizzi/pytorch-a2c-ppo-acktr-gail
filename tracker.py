@@ -14,7 +14,7 @@ class WandBTracker:
         if name is not None:
             self.name = name
         else:
-            self.name = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            self.name = "pt_baseline" + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         print(self.name)
         print(args)
         # wandb.init(project="test", resume=True, config=args)
